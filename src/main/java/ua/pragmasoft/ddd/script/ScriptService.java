@@ -9,7 +9,7 @@ public interface ScriptService extends ScriptInfoRepository {
 
     default ScriptInfo create(String code) throws ScriptException {
         return create(code, UUID.randomUUID().toString());
-    };
+    }
 
     ScriptExecution execute(ScriptInfo scriptInfo) throws ScriptException;
 

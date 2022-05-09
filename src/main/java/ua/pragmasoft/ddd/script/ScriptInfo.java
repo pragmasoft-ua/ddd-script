@@ -26,7 +26,7 @@ public class ScriptInfo {
 
     public enum Status {
         INVALID, SCHEDULED, COMPLETED, RUNNING, ERROR
-    };
+    }
 
     String getOut() {
         return out.toString();
@@ -36,7 +36,7 @@ public class ScriptInfo {
         return err.toString();
     }
 
-    protected void setStatus(Status status) {
+    protected final void setStatus(Status status) {
         Status old = this.status;
         // ensure status invariants
         this.status = status;

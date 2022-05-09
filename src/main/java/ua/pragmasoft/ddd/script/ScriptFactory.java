@@ -2,6 +2,9 @@ package ua.pragmasoft.ddd.script;
 
 import java.io.OutputStream;
 
+/**
+ * Anticorruption layer around GraalJS
+ */
 public interface ScriptFactory {
     Script createScript(String sourceCode, OutputStream stdOut, OutputStream stdErr) throws ScriptException;
 

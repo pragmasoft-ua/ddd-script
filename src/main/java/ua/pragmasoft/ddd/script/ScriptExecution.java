@@ -5,14 +5,14 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.FutureTask;
 
-public class ScriptExecution extends FutureTask<ScriptInfo> {
+public class ScriptExecution extends FutureTask<ScriptInfo.Status> {
 
-    public final ScriptInfo scriptInfo;
+    protected final ScriptInfo scriptInfo;
     Instant started = null;
     Instant finished = null;
 
     public ScriptExecution(ScriptInfo scriptInfo) {
-        super(scriptInfo.script, scriptInfo);
+        super(scriptInfo.script, null);
         this.scriptInfo = scriptInfo;
     }
 
@@ -22,6 +22,7 @@ public class ScriptExecution extends FutureTask<ScriptInfo> {
             this.started = Instant.now();
             super.run();
         } finally {
+            set(this.scriptInfo.status);
             this.finished = Instant.now();
         }
     }
@@ -36,6 +37,14 @@ public class ScriptExecution extends FutureTask<ScriptInfo> {
 
     Optional<Duration> getDuration() {
         return Optional.ofNullable(this.started)
-                .flatMap((s) -> Optional.ofNullable(this.finished != null ? Duration.between(s, this.finished) : null));
+                .flatMap(s -> Optional.ofNullable(this.finished != null ? Duration.between(s, this.finished) : null));
+    }
+
+    String getName() {
+        return scriptInfo.name;
+    }
+
+    ScriptInfo.Status getStatus() {
+        return scriptInfo.status;
     }
 }

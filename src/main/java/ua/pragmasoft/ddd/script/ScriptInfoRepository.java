@@ -19,7 +19,7 @@ public interface ScriptInfoRepository {
 
     default Iterable<ScriptInfo> all() throws ScriptException {
         return all(SortBy.CREATED);
-    };
+    }
 
     public enum SortBy {
         NAME, STATUS, CREATED
