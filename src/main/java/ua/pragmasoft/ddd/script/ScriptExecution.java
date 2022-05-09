@@ -22,7 +22,7 @@ public class ScriptExecution extends FutureTask<ScriptInfo.Status> {
             this.started = Instant.now();
             super.run();
         } finally {
-            set(this.scriptInfo.status);
+            set(this.scriptInfo.getStatus());
             this.finished = Instant.now();
         }
     }
@@ -45,6 +45,6 @@ public class ScriptExecution extends FutureTask<ScriptInfo.Status> {
     }
 
     ScriptInfo.Status getStatus() {
-        return scriptInfo.status;
+        return scriptInfo.getStatus();
     }
 }

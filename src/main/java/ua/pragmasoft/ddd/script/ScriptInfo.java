@@ -4,12 +4,13 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ScriptInfo {
 
     public final Script script;
     public final String name;
-    protected Status status;
+    protected final AtomicReference<Status> status;
     public final Instant created;
     private final ScriptOutput out;
     private final ScriptOutput err;
@@ -18,7 +19,7 @@ public class ScriptInfo {
     ScriptInfo(Script script, String name, Status status, Instant created, ScriptOutput out, ScriptOutput err) {
         this.script = script;
         this.name = name;
-        this.status = status;
+        this.status = new AtomicReference<>(status);
         this.out = out;
         this.err = err;
         this.created = created;
@@ -37,10 +38,14 @@ public class ScriptInfo {
     }
 
     protected final void setStatus(Status status) {
-        Status old = this.status;
         // ensure status invariants
-        this.status = status;
+        // then use CompareAndSet
+        Status old = this.status.getAndSet(status);
         this.observable.firePropertyChange("status", old, status);
+    }
+
+    public Status getStatus() {
+        return status.get();
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
