@@ -1,4 +1,4 @@
-package ua.pragmasoft.ddd.script;
+package ua.pragmasoft.ddd.domain.script;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -9,8 +9,11 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 public class ScriptInfo {
+
+    static final Logger log = Logger.getLogger(ScriptInfo.class.getName());
 
     public final Script script;
     public final String name;
@@ -23,13 +26,13 @@ public class ScriptInfo {
     final FutureTask<ScriptInfo.Status> execution;
     private final PropertyChangeSupport observable = new PropertyChangeSupport(this);
 
-    ScriptInfo(Script script, String name, Instant created, ScriptOutput out, ScriptOutput err) {
+    ScriptInfo(Script script, String name, ScriptOutput out, ScriptOutput err) {
         this.script = script;
         this.name = name;
         this.status = new AtomicReference<>(Status.SCHEDULED);
         this.out = out;
         this.err = err;
-        this.created = created;
+        this.created = Instant.now();
         this.execution = new FutureTask<>(this::callScript);
     }
 
@@ -79,14 +82,6 @@ public class ScriptInfo {
         observable.removePropertyChangeListener(listener);
     }
 
-    public interface ScriptOutput {
-
-        OutputStream asStream();
-
-        @Override
-        String toString();
-    }
-
     protected Status callScript() {
         try {
             this.started = Instant.now();
@@ -94,6 +89,7 @@ public class ScriptInfo {
             script.run();
             setStatus(Status.RUNNING, Status.COMPLETED);
         } catch (Exception e) {
+            log.throwing(ScriptInfo.class.getSimpleName(), "callScript", e);
             setStatus(Status.RUNNING, Status.ERROR);
             try (var errorPrintStream = new PrintStream(this.err.asStream())) {
                 errorPrintStream.println("Exception: " + e.getClass() + " " + e.getMessage());
@@ -102,6 +98,21 @@ public class ScriptInfo {
         } finally {
             this.finished = Instant.now();
         }
+        log.fine(this::toString);
         return getStatus();
     }
+
+    @Override
+    public String toString() {
+        return "Script [name=" + name + ", status=" + status + "]";
+    }
+
+    public interface ScriptOutput {
+
+        OutputStream asStream();
+
+        @Override
+        String toString();
+    }
+
 }

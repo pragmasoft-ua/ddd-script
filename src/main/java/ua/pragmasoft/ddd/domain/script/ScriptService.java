@@ -1,4 +1,4 @@
-package ua.pragmasoft.ddd.script;
+package ua.pragmasoft.ddd.domain.script;
 
 import java.util.UUID;
 import java.util.concurrent.Future;
@@ -15,5 +15,5 @@ public interface ScriptService extends ScriptInfoRepository {
 
     default Future<ScriptInfo.Status> executionOf(ScriptInfo scriptInfo) {
         return scriptInfo.execution;
-    };
+    }
 }

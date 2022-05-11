@@ -1,9 +1,9 @@
-package ua.pragmasoft.ddd.script;
+package ua.pragmasoft.ddd.domain.script;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 
-import ua.pragmasoft.ddd.script.ScriptInfo.ScriptOutput;
+import ua.pragmasoft.ddd.domain.script.ScriptInfo.ScriptOutput;
 
 public class ScriptOutputImpl implements ScriptOutput {
 
@@ -12,7 +12,7 @@ public class ScriptOutputImpl implements ScriptOutput {
     @Override
     public OutputStream asStream() {
         return this.s;
-    };
+    }
 
     @Override
     public String toString() {
