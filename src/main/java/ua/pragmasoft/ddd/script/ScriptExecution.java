@@ -1,30 +1,22 @@
 package ua.pragmasoft.ddd.script;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.FutureTask;
 
-public class ScriptExecution extends FutureTask<ScriptInfo.Status> {
+public class ScriptExecution extends FutureTask<ScriptInfo.Status> implements PropertyChangeListener {
 
     protected final ScriptInfo scriptInfo;
     Instant started = null;
     Instant finished = null;
 
     public ScriptExecution(ScriptInfo scriptInfo) {
-        super(scriptInfo.script, null);
+        super(scriptInfo);
         this.scriptInfo = scriptInfo;
-    }
-
-    @Override
-    public void run() {
-        try {
-            this.started = Instant.now();
-            super.run();
-        } finally {
-            set(this.scriptInfo.getStatus());
-            this.finished = Instant.now();
-        }
+        this.scriptInfo.addPropertyChangeListener(this);
     }
 
     Optional<Instant> getStarted() {
@@ -46,5 +38,14 @@ public class ScriptExecution extends FutureTask<ScriptInfo.Status> {
 
     ScriptInfo.Status getStatus() {
         return scriptInfo.getStatus();
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent e) {
+        if (e.getNewValue() == ScriptInfo.Status.RUNNING) {
+            this.started = Instant.now();
+        } else {
+            this.finished = Instant.now();
+        }
     }
 }
