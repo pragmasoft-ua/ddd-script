@@ -1,7 +1,7 @@
 package ua.pragmasoft.ddd.script;
 
-import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 public interface ScriptService extends ScriptInfoRepository {
 
@@ -11,7 +11,9 @@ public interface ScriptService extends ScriptInfoRepository {
         return create(code, UUID.randomUUID().toString());
     }
 
-    ScriptExecution execute(ScriptInfo scriptInfo) throws ScriptException;
+    Future<ScriptInfo.Status> execute(ScriptInfo scriptInfo) throws ScriptException;
 
-    Optional<ScriptExecution> executionOf(ScriptInfo scriptInfo) throws ScriptException;
+    default Future<ScriptInfo.Status> executionOf(ScriptInfo scriptInfo) {
+        return scriptInfo.execution;
+    };
 }

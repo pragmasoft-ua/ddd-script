@@ -4,18 +4,23 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.Callable;
+import java.util.Optional;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ScriptInfo implements Callable<ScriptInfo.Status> {
+public class ScriptInfo {
 
     public final Script script;
     public final String name;
     protected final AtomicReference<Status> status;
     public final Instant created;
+    private volatile Instant started = null;
+    private volatile Instant finished = null;
     private final ScriptOutput out;
     private final ScriptOutput err;
+    final FutureTask<ScriptInfo.Status> execution;
     private final PropertyChangeSupport observable = new PropertyChangeSupport(this);
 
     ScriptInfo(Script script, String name, Status status, Instant created, ScriptOutput out, ScriptOutput err) {
@@ -25,6 +30,7 @@ public class ScriptInfo implements Callable<ScriptInfo.Status> {
         this.out = out;
         this.err = err;
         this.created = created;
+        this.execution = new FutureTask<>(this::call);
     }
 
     public enum Status {
@@ -48,6 +54,19 @@ public class ScriptInfo implements Callable<ScriptInfo.Status> {
 
     public synchronized Status getStatus() {
         return status.get();
+    }
+
+    Optional<Instant> getStarted() {
+        return Optional.ofNullable(this.started);
+    }
+
+    Optional<Instant> getFinished() {
+        return Optional.ofNullable(this.finished);
+    }
+
+    Optional<Duration> getDuration() {
+        return Optional.ofNullable(this.started)
+                .flatMap(s -> Optional.ofNullable(this.finished != null ? Duration.between(s, this.finished) : null));
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -81,14 +100,17 @@ public class ScriptInfo implements Callable<ScriptInfo.Status> {
         }
     }
 
-    @Override
-    public Status call() throws Exception {
+    protected Status call() {
         try {
+            this.started = Instant.now();
             setStatus(Status.RUNNING);
             script.run();
             setStatus(Status.COMPLETED);
         } catch (Exception e) {
             setStatus(Status.ERROR);
+            // handle error
+        } finally {
+            this.finished = Instant.now();
         }
         return getStatus();
     }
