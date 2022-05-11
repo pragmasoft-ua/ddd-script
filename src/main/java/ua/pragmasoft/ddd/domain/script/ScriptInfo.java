@@ -29,7 +29,7 @@ public class ScriptInfo {
     ScriptInfo(Script script, String name, ScriptOutput out, ScriptOutput err) {
         this.script = script;
         this.name = name;
-        this.status = new AtomicReference<>(Status.SCHEDULED);
+        this.status = new AtomicReference<>(Status.NEW);
         this.out = out;
         this.err = err;
         this.created = Instant.now();
@@ -37,7 +37,7 @@ public class ScriptInfo {
     }
 
     public enum Status {
-        INVALID, SCHEDULED, COMPLETED, RUNNING, ERROR
+        NEW, RUNNING, COMPLETED, ERROR
     }
 
     String getOut() {
@@ -48,7 +48,7 @@ public class ScriptInfo {
         return err.toString();
     }
 
-    protected final synchronized void setStatus(Status expectedStatus, Status newStatus) {
+    protected final void setStatus(Status expectedStatus, Status newStatus) {
         boolean success = this.status.compareAndSet(expectedStatus, newStatus);
         if (!success) {
             throw new IllegalStateException(
@@ -57,7 +57,7 @@ public class ScriptInfo {
         this.observable.firePropertyChange("status", expectedStatus, status);
     }
 
-    public synchronized Status getStatus() {
+    public Status getStatus() {
         return status.get();
     }
 
@@ -82,10 +82,14 @@ public class ScriptInfo {
         observable.removePropertyChangeListener(listener);
     }
 
+    public void stopExecution() {
+        this.execution.cancel(true);
+    }
+
     protected Status callScript() {
         try {
             this.started = Instant.now();
-            setStatus(Status.SCHEDULED, Status.RUNNING);
+            setStatus(Status.NEW, Status.RUNNING);
             script.run();
             setStatus(Status.RUNNING, Status.COMPLETED);
         } catch (Exception e) {
